@@ -2,7 +2,7 @@ const prompt = require('prompt-sync')();
 gameStarter();
 
 function gameStarter(){
-  const wordObject = {
+  const gameData = {
     chosenWord : [],
     letters: [],
     guessedLetters: [],
@@ -59,10 +59,10 @@ function gameStarter(){
 =========`],
   };
 
-  const input = prompt('Woul you like to play some hangman?').toLocaleLowerCase();
+  const input = prompt('Would you like to play some hangman?').toLocaleLowerCase();
   console.log(input);
   if (input === 'yes'){
-    mainGame(wordObject);
+    mainGame(gameData);
   } else if (input === 'no') {
     console.log('That\'s okay, come back later when you want to play!');
   } else {
@@ -71,25 +71,26 @@ function gameStarter(){
   }
 }
 
-function mainGame(wordObject){
-  wordObject.chosenWord = pickWord();
-  wordObject.letters = emptyUnderslashes(wordObject.chosenWord);
-  while (wordObject.lives !== 0 && !winningCondition(wordObject)){
-    console.log(`\nYour word contains ${wordObject.chosenWord.length} letters:`);
-    console.log(arrayToString(wordObject.letters));
-    wordObject = guessLetter(wordObject);
+function mainGame(gameData){
+  gameData.chosenWord = chooseWord();
+  gameData.letters = generateUnderscores(gameData.chosenWord);
+  while (gameData.lives !== 0 && !isPlayerWon(gameData.letters, gameData.chosenWord)){
+    console.log(`\nYour word contains ${gameData.chosenWord.length} letters:`);
+    console.log(convertLettersToString(gameData.letters));
+    const input = getInput(gameData.chosenWord);
+    checkGuess(gameData, input);
   }
-  if (wordObject.lives === 0){
-    console.log(`You lost the game!\nThe word was: ${arrayToString(wordObject.chosenWord)}`);
+  if (gameData.lives === 0){
+    console.log(`You lost the game!\nThe word was: ${convertLettersToString(gameData.chosenWord)}`);
   }
   gameStarter();
 }
 
-function pickWord(){
-  const array = [];
+function chooseWord(){
+  const letters = [];
   const maxValue = 19;
   const minValue = 0;
-  const randomWord = Math.floor(Math.random() * (maxValue - minValue) + minValue);
+  const randomIndex = Math.floor(Math.random() * (maxValue - minValue) + minValue);
   const wordBank = [
     'apple',
     'banana',
@@ -112,76 +113,75 @@ function pickWord(){
     'sunflower',
     'tiger',
   ];
-  for (const letter of wordBank[randomWord]){
-    array.push(letter);
+  for (const letter of wordBank[randomIndex]){
+    letters.push(letter);
   }
-  return array;
+  //letters = wordBank[randomIndex].split();
+  return letters;
+}
+function mapFunc(element){
+  return "_"
 }
 
-function emptyUnderslashes(guessWord) {
-  const lettersArray = [];
-  for (let i = 0; i < guessWord.length; i++) {
-    lettersArray.push('_');
-  }
-  return lettersArray;
+function generateUnderscores(letters) {
+  const underscores = letters.map(mapFunc);
+  return underscores;
 }
 
-function guessLetter(object){
-  let losedOneLife = true;
-  const input = getInput(object);
-  if (object.guessedLetters.includes(input)){
+function checkGuess(gameData, input){
+  let hasLostOneLife = true;
+  if (gameData.guessedLetters.includes(input)){
     console.log(`You already guessed the "${input}" letter!`);
-    losedOneLife = false;
+    hasLostOneLife = false;
   } else {
-    object.guessedLetters.push(input);
-    for (let i = 0; i < object.chosenWord.length; i++){
-      if (object.chosenWord[i].toLocaleLowerCase() === input){
-        object.letters[i] = object.chosenWord[i];
+    gameData.guessedLetters.push(input);
+    for (let i = 0; i < gameData.chosenWord.length; i++){
+      if (gameData.chosenWord[i].toLocaleLowerCase() === input){
+        gameData.letters[i] = gameData.chosenWord[i];
         console.log('You guessed it!');
-        losedOneLife = false;
+        hasLostOneLife = false;
       }
     }
   }
-  if (losedOneLife){
-    object.lives -= 1;
+  if (hasLostOneLife){
+    gameData.lives -= 1;
     console.log('Bad guess! You losed one life!');
-    console.log(object.livesAscii[object.lives]);
-    console.log(`You guessed these letters so far: ${arrayToString(object.guessedLetters)}`);
+    console.log(gameData.livesAscii[gameData.lives]);
+    console.log(`You guessed these letters so far: ${convertLettersToString(gameData.guessedLetters)}`);
   }
-  return object;
 }
 
-function getInput(object) {
-  let notValid = true;
+function getInput(chosenWord) {
+  let isValid = true;
   let input;
-  while (notValid) {
+  while (isValid) {
     input = prompt('Guess a letter! ').toLocaleLowerCase();
     if (input === 'show'){
-      console.log(arrayToString(object.chosenWord));
+      console.log(convertLettersToString(chosenWord));
     }
     else if (input.length !== 1) {
       console.log('That\'s not a valid guess!');
     } else {
-      notValid = false;
+      isValid = false;
     }
   }
   return input;
 }
 
-function arrayToString (array){
-  let string = '';
-  for (const letter of array){
-    string += `${letter} `;
+function convertLettersToString (letters){
+  let joinedLetters = '';
+  for (const letter of letters){
+    joinedLetters += `${letter} `;
   }
-  return string;
+  return joinedLetters;
 }
 
-function winningCondition (object){
-  for (const letter of object.letters){
+function isPlayerWon (letters, chosenWord){
+  for (const letter of letters){
     if (letter === '_'){
       return false;
     }
   }
-  console.log(`You won the game!\nThe word was: ${arrayToString(object.chosenWord)}`);
+  console.log(`You won the game!\nThe word was: ${convertLettersToString(chosenWord)}`);
   return true;
 }
