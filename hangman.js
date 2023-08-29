@@ -128,7 +128,7 @@ function emptyUnderslashes(guessWord) {
 
 function guessLetter(object){
   let losedOneLife = true;
-  const input = getInput();
+  const input = getInput(object);
   if (object.guessedLetters.includes(input)){
     console.log(`You already guessed the "${input}" letter!`);
     losedOneLife = false;
@@ -151,12 +151,15 @@ function guessLetter(object){
   return object;
 }
 
-function getInput() {
+function getInput(object) {
   let notValid = true;
   let input;
   while (notValid) {
     input = prompt('Guess a letter! ').toLocaleLowerCase();
-    if (input.length !== 1) {
+    if (input === 'show'){
+      console.log(arrayToString(object.chosenWord));
+    }
+    else if (input.length !== 1) {
       console.log('That\'s not a valid guess!');
     } else {
       notValid = false;
